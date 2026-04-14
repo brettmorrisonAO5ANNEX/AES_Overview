@@ -67,24 +67,37 @@ class SPN_Scene(Scene):
         self.play(FadeIn(cipher_extras))
 
         #-------- SECTION MARKER 3 --------#
-        self.next_section(skip_animations=0)
+        self.next_section(skip_animations=1)
 
         #TODO: animate PT entering the cipher
-
-        # animate state jumbling
-        # 1. init state
         self.play(FadeOut(spn_comp_group))
-        initialize_state(state)
-        self.play(FadeIn(state))
 
+        # animate state jumbling with round counter
+        round_text = Text("Round: ", font_size=30)
+        round_tracker = ValueTracker(0)
+        round_counter = always_redraw(
+            lambda: Text(
+                f"{int(round_tracker.get_value())}", 
+                font_size=30).move_to(round_text.get_right() + RIGHT * 0.25)
+        )
+        round_group = VGroup(round_text, round_counter).move_to(cipher.get_bottom() + DOWN * 0.5)
+
+        # 1. init state
+        init_state = state.copy()
+        initialize_state(init_state)
+        self.play(FadeIn(init_state), FadeIn(round_group))
+        
         # 2. animate color changes
         rnd = RandomColorGenerator(sample_colors=colors)
-        for _ in range(3):
-            animations = update_state(rnd, state)
-            self.play(*animations, run_time=1)
-            self.wait(0.5)
+        prev_state = init_state
 
-        # 3. update a round counter
+        for _ in range(4):
+            (prev_state, animation) = update_state(rnd, state, prev_state)
+            self.play(round_tracker.animate.increment_value(1))
+            self.play(animation)
+
+        #---- SECTION MARKER 4 ----#
+        self.next_section(skip_animations=0)
     
 
 
@@ -97,13 +110,14 @@ def initialize_state(state):
         for c in range(4):
             state.add_highlighted_cell((r+1, c+1), color=colors[r*4 + c])
 
-def update_state(rnd, state):
-    animations = []
-
+def update_state(rnd, og_state, prev_state):
+    # create new random color state to replace previous state
+    next_state = og_state.copy()
     for r in range(4):
         for c in range(4):
-            cell = state.get_highlighted_cell((r+1, c+1))
-            animations.append(
-                cell.animate.set_fill(rnd.next())
-            )
-    return animations
+            next_state.add_highlighted_cell((r+1, c+1), color=rnd.next())
+    
+    # create animation to replace old state with new state
+    return (next_state, ReplacementTransform(prev_state, next_state))
+            
+                
