@@ -38,12 +38,12 @@ class SPN_Scene(Scene):
         cipher = Rectangle(width=state.get_width() + 0.5, height=state.get_height() + 0.5, color=GRAY, fill_opacity=0.5)
         cipher_group = VGroup(cipher)
 
-        s_box_sq = Rectangle(width=state.get_width(), height=(state.get_height() / 2) - 0.25, color=BLUE, fill_opacity=1)
-        s_box_text = Text("S-Box", font_size=20, color=BLACK).move_to(s_box_sq.get_center())
+        s_box_sq = Rectangle(width=state.get_width(), height=(state.get_height() / 2) - 0.25, color=BLUE, fill_opacity=0.5)
+        s_box_text = Text("S-Box", font_size=20, color=WHITE).move_to(s_box_sq.get_center())
         s_box = VGroup(s_box_sq, s_box_text)
 
-        p_box_sq = Rectangle(width=state.get_width(), height=(state.get_height() / 2) - 0.25, color=YELLOW, fill_opacity=1).move_to(s_box.get_bottom() + DOWN)
-        p_box_text = Text("P-Box", font_size=20, color=BLACK).move_to(p_box_sq.get_center())
+        p_box_sq = Rectangle(width=state.get_width(), height=(state.get_height() / 2) - 0.25, color=YELLOW, fill_opacity=0.5).move_to(s_box.get_bottom() + DOWN)
+        p_box_text = Text("P-Box", font_size=20, color=WHITE).move_to(p_box_sq.get_center())
         p_box = VGroup(p_box_sq, p_box_text)
 
         spn_comp_group = VGroup(s_box, p_box).move_to(cipher.get_center())
@@ -65,12 +65,11 @@ class SPN_Scene(Scene):
 
         self.play(FadeIn(cipher_group))
         self.play(FadeIn(cipher_extras))
+        self.play(FadeOut(spn_comp_group))
 
         #-------- SECTION MARKER 3 --------#
-        self.next_section(skip_animations=1)
-
         #TODO: animate PT entering the cipher
-        self.play(FadeOut(spn_comp_group))
+        self.next_section(skip_animations=1)
 
         # animate state jumbling with round counter
         round_text = Text("Round: ", font_size=30)
@@ -98,7 +97,29 @@ class SPN_Scene(Scene):
 
         #---- SECTION MARKER 4 ----#
         self.next_section(skip_animations=0)
-    
+
+        self.play(FadeOut(prev_state),
+                  FadeOut(round_group),
+                  FadeIn(spn_comp_group))
+        self.play(FadeOut(cipher_extras),
+                  FadeOut(cipher),
+                  FadeOut(p_box),
+                  s_box.animate.move_to(ORIGIN))
+
+        input_byte = MathTex(r"\left\{ b \right\}").scale(1.1).move_to(s_box.get_left() + LEFT * 1.5)
+        output_byte = MathTex(r"\left\{ b' \right\}").scale(1.1).move_to(s_box.get_right() + RIGHT * 1.5)
+
+        self.play(FadeIn(input_byte), FadeIn(output_byte))
+        self.wait(2)
+
+
+                                             
+
+
+
+
+
+
 
 
 
