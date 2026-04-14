@@ -9,9 +9,9 @@ colors = [BLUE_A, GREEN_A, YELLOW_A, RED_A,
 class SPN_Scene(Scene):
     def construct(self):
         #-------- SECTION MARKER 1 --------#
+        # intro 
         self.next_section(skip_animations=1)
 
-        # intro
         spn_text = Text("1. Substitution-Permutation Networks (SPNs)", font_size=36).shift(UP * 0.5)
         fft_text = Text("2. Finite Field Theory", font_size=36).next_to(spn_text, DOWN).align_to(spn_text, LEFT)
         self.play(Write(spn_text))
@@ -22,6 +22,7 @@ class SPN_Scene(Scene):
         self.wait(1)
         
         #-------- SECTION MARKER 2 --------#
+        # basic SPN structure
         self.next_section(skip_animations=1)
 
         # size of SPN components are relative to this table
@@ -68,6 +69,7 @@ class SPN_Scene(Scene):
         self.play(FadeOut(spn_comp_group))
 
         #-------- SECTION MARKER 3 --------#
+        # jumbling plaintext in SPN
         #TODO: animate PT entering the cipher
         self.next_section(skip_animations=1)
 
@@ -83,7 +85,7 @@ class SPN_Scene(Scene):
 
         # 1. init state
         init_state = state.copy()
-        initialize_state(init_state)
+        initialize_state(4, 4, init_state)
         self.play(FadeIn(init_state), FadeIn(round_group))
         
         # 2. animate color changes
@@ -91,12 +93,13 @@ class SPN_Scene(Scene):
         prev_state = init_state
 
         for _ in range(4):
-            (prev_state, animation) = update_state(rnd, state, prev_state)
+            (prev_state, animation) = update_state(4, 4, rnd, state, prev_state)
             self.play(round_tracker.animate.increment_value(1))
             self.play(animation)
 
         #---- SECTION MARKER 4 ----#
-        self.next_section(skip_animations=0)
+        # S-Box description
+        self.next_section(skip_animations=1)
 
         self.play(FadeOut(prev_state),
                   FadeOut(round_group),
@@ -106,14 +109,74 @@ class SPN_Scene(Scene):
                   FadeOut(p_box),
                   s_box.animate.move_to(ORIGIN))
 
-        input_byte = MathTex(r"\left\{ b \right\}").scale(1.1).move_to(s_box.get_left() + LEFT * 1.5)
-        output_byte = MathTex(r"\left\{ b' \right\}").scale(1.1).move_to(s_box.get_right() + RIGHT * 1.5)
+        sub_function_circle = Circle(radius=0.4, color=GRAY, fill_opacity=0.5).move_to(s_box.get_center() + DOWN * 1.5)
+        sub_function_text = Text("S", font_size=24, slant=ITALIC).move_to(sub_function_circle.get_center())
+        sub_function_group = VGroup(sub_function_circle, sub_function_text)
+        input_byte = MathTex(r"\left\{ b \right\}").scale(1.1).move_to(sub_function_group.get_left() + LEFT * 1.5)
+        output_byte = MathTex(r"\left\{ b' \right\}").scale(1.1).move_to(sub_function_group.get_right() + RIGHT * 1.5)
+        input_line = Line(input_byte.get_right() + RIGHT * 0.1, sub_function_circle.get_left(), color=WHITE)
+        output_line = always_redraw(
+            lambda: Line(sub_function_circle.get_right(), 
+                         output_byte.get_left() + LEFT * 0.1, 
+                         color=WHITE)
+        )
+        sub_group = VGroup(sub_function_group, input_byte, output_byte, input_line, output_line)
 
-        self.play(FadeIn(input_byte), FadeIn(output_byte))
+        self.play(FadeIn(input_byte), FadeIn(sub_function_group))
+        self.wait(0.5)
+        self.play(Create(input_line))
+        self.wait(0.5)
+        self.play(Create(output_line), FadeIn(output_byte))
+        self.wait(2)
+        self.play(FadeOut(s_box),
+                  sub_group.animate.move_to(ORIGIN))
+        
+        alternate_byte = MathTex(r"\left\{ b'' \right\}").scale(1.1).move_to(output_byte.get_center() + DOWN)
+        alternate_line = Line(sub_function_circle.get_right(), alternate_byte.get_left() + LEFT * 0.1, color=WHITE)
+        red_rectangle = Rectangle(width=6, height=4, color=RED, fill_opacity=0)
+        sub_group.add(alternate_byte, alternate_line, red_rectangle)
+
+        self.play(Create(red_rectangle))
+        self.play(output_byte.animate.shift(UP),
+                  Create(alternate_line),
+                  FadeIn(alternate_byte))
         self.wait(2)
 
+        #---- SECTION MARKER 5 ----#
+        # P-Box description
+        self.next_section(skip_animations=0)
 
-                                             
+        p_box.move_to(ORIGIN)
+        self.play(FadeOut(sub_group), FadeIn(p_box), run_time=1)
+        self.wait(1)
+
+        expanded_init_byte = MathTable([["b_{0}", "b_{1}", "b_{2}", "b_{3}",
+                                    "b_{4}", "b_{5}", "b_{6}", "b_{7}"]],
+                                  include_outer_lines=True,
+                                  v_buff=1,
+                                  h_buff=1).scale(0.5).move_to(p_box.get_center() + UP * 2)
+        expanded_output_byte = expanded_init_byte.copy().move_to(p_box.get_center() + DOWN * 2)
+
+        init_byte_colors = [BLUE_C, TEAL_C, GREEN_C, YELLOW_C, GOLD_C, RED_C, MAROON_C, PURPLE_C]
+        output_byte_colors = [GREEN_C, RED_C, BLUE_C, PURPLE_C, YELLOW_C, TEAL_C, MAROON_C, GOLD_C]
+
+        for i in range(8):
+            expanded_init_byte.add_highlighted_cell((1, i+1), color=init_byte_colors[i])
+            expanded_output_byte.add_highlighted_cell((1, i+1), color=output_byte_colors[i])
+
+        input_line = Line(expanded_init_byte.get_bottom(), p_box.get_top(), color=WHITE)
+        output_line = Line(p_box.get_bottom(), expanded_output_byte.get_top(), color=WHITE)
+
+        self.play(FadeIn(expanded_init_byte),
+                  Create(input_line))  
+        self.wait(1)  
+
+        pre_output_byte = expanded_init_byte.copy().move_to(expanded_output_byte.get_center())
+
+        self.play(Create(output_line),
+                  FadeIn(pre_output_byte))
+        self.play(ReplacementTransform(pre_output_byte, expanded_output_byte))
+        self.wait(2)
 
 
 
@@ -126,16 +189,16 @@ class SPN_Scene(Scene):
 
 
 #---- HELPERS ----#
-def initialize_state(state):
-    for r in range(4):
-        for c in range(4):
-            state.add_highlighted_cell((r+1, c+1), color=colors[r*4 + c])
+def initialize_state(rows, cols, state):
+    for r in range(rows):
+        for c in range(cols):
+            state.add_highlighted_cell((r+1, c+1), color=colors[r*cols + c])
 
-def update_state(rnd, og_state, prev_state):
+def update_state(rows, cols, rnd, og_state, prev_state):
     # create new random color state to replace previous state
     next_state = og_state.copy()
-    for r in range(4):
-        for c in range(4):
+    for r in range(rows):
+        for c in range(cols):
             next_state.add_highlighted_cell((r+1, c+1), color=rnd.next())
     
     # create animation to replace old state with new state
