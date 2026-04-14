@@ -151,14 +151,17 @@ class SPN_Scene(Scene):
         self.wait(1)
 
         expanded_init_byte = MathTable([["b_{0}", "b_{1}", "b_{2}", "b_{3}",
-                                    "b_{4}", "b_{5}", "b_{6}", "b_{7}"]],
-                                  include_outer_lines=True,
-                                  v_buff=1,
-                                  h_buff=1).scale(0.5).move_to(p_box.get_center() + UP * 2)
-        expanded_output_byte = expanded_init_byte.copy().move_to(p_box.get_center() + DOWN * 2)
-
+                                         "b_{4}", "b_{5}", "b_{6}", "b_{7}"]],
+                                        include_outer_lines=True,
+                                        v_buff=1,
+                                        h_buff=1).scale(0.5).move_to(p_box.get_center() + UP * 2)
+        expanded_output_byte = MathTable([["b_{2}", "b_{5}", "b_{0}", "b_{7}",
+                                           "b_{3}", "b_{1}", "b_{4}", "b_{6}"]],
+                                          include_outer_lines=True,
+                                          v_buff=1,
+                                          h_buff=1).scale(0.5).move_to(p_box.get_center() + DOWN * 2)
         init_byte_colors = [BLUE_C, TEAL_C, GREEN_C, YELLOW_C, GOLD_C, RED_C, MAROON_C, PURPLE_C]
-        output_byte_colors = [GREEN_C, RED_C, BLUE_C, PURPLE_C, YELLOW_C, TEAL_C, MAROON_C, GOLD_C]
+        output_byte_colors = [GREEN_C, RED_C, BLUE_C, PURPLE_C, YELLOW_C, TEAL_C, GOLD_C, MAROON_C]
 
         for i in range(8):
             expanded_init_byte.add_highlighted_cell((1, i+1), color=init_byte_colors[i])
