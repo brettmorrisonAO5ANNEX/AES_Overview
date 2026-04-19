@@ -10,7 +10,7 @@ class SPN_Scene(Scene):
     def construct(self):
         #-------- SECTION MARKER 1 --------#
         # intro 
-        self.next_section(skip_animations=1)
+        self.next_section(skip_animations=0)
 
         spn_text = Text("1. Substitution-Permutation Networks (SPNs)", font_size=36).shift(UP * 0.5)
         fft_text = Text("2. Finite Field Theory", font_size=36).next_to(spn_text, DOWN).align_to(spn_text, LEFT)
@@ -23,7 +23,7 @@ class SPN_Scene(Scene):
         
         #-------- SECTION MARKER 2 --------#
         # basic SPN structure
-        self.next_section(skip_animations=1)
+        self.next_section(skip_animations=0)
 
         # size of SPN components are relative to this table
         state = MathTable([["b_{00}", "b_{04}", "b_{08}", "b_{12}"],
@@ -71,7 +71,7 @@ class SPN_Scene(Scene):
         #-------- SECTION MARKER 3 --------#
         # jumbling plaintext in SPN
         #TODO: animate PT entering the cipher
-        self.next_section(skip_animations=1)
+        self.next_section(skip_animations=0)
 
         # animate state jumbling with round counter
         round_text = Text("Round: ", font_size=30)
@@ -99,7 +99,7 @@ class SPN_Scene(Scene):
 
         #---- SECTION MARKER 4 ----#
         # S-Box description
-        self.next_section(skip_animations=1)
+        self.next_section(skip_animations=0)
 
         self.play(FadeOut(prev_state),
                   FadeOut(round_group),
@@ -134,11 +134,10 @@ class SPN_Scene(Scene):
         alternate_byte = MathTex(r"\left\{ b'' \right\}").scale(1.1).move_to(output_byte.get_center() + DOWN)
         alternate_line = Line(sub_function_circle.get_right(), alternate_byte.get_left() + LEFT * 0.1, color=WHITE)
         red_rectangle = Rectangle(width=6, height=4, color=RED, fill_opacity=0)
-        sub_group.add(alternate_byte, alternate_line, red_rectangle)
 
         self.play(Create(red_rectangle))
-        self.play(output_byte.animate.shift(UP),
-                  Create(alternate_line),
+        self.play(output_byte.animate.shift(UP))
+        self.play(Create(alternate_line),
                   FadeIn(alternate_byte))
         self.wait(2)
 
@@ -147,7 +146,11 @@ class SPN_Scene(Scene):
         self.next_section(skip_animations=0)
 
         p_box.move_to(ORIGIN)
-        self.play(FadeOut(sub_group), FadeIn(p_box), run_time=1)
+        self.play(FadeOut(sub_group),
+                  FadeOut(alternate_byte),
+                  FadeOut(alternate_line),
+                  FadeOut(red_rectangle),
+                  FadeIn(p_box), run_time=1)
         self.wait(1)
 
         expanded_init_byte = MathTable([["b_{0}", "b_{1}", "b_{2}", "b_{3}",
@@ -169,17 +172,30 @@ class SPN_Scene(Scene):
 
         input_line = Line(expanded_init_byte.get_bottom(), p_box.get_top(), color=WHITE)
         output_line = Line(p_box.get_bottom(), expanded_output_byte.get_top(), color=WHITE)
-
         self.play(FadeIn(expanded_init_byte),
                   Create(input_line))  
         self.wait(1)  
 
         pre_output_byte = expanded_init_byte.copy().move_to(expanded_output_byte.get_center())
-
         self.play(Create(output_line),
                   FadeIn(pre_output_byte))
         self.play(ReplacementTransform(pre_output_byte, expanded_output_byte))
         self.wait(2)
+
+        permutated_byte_group = VGroup(expanded_init_byte, input_line, expanded_output_byte, output_line)
+        self.play(FadeOut(permutated_byte_group))
+
+        #---- SECTION MARKER 6 ----#
+        # Round Key Addition
+        self.next_section(skip_animations=0)
+
+        s_box.shift(UP * 0.75)
+        self.play(p_box.animate.shift(DOWN * 0.75),
+                  FadeIn(cipher),
+                  FadeIn(cipher_extras),
+                  FadeIn(s_box),
+                  runtime=1)
+        self.wait(1)
 
 
 
