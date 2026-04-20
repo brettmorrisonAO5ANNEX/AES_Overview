@@ -121,7 +121,6 @@ class TestScene(Scene):
         self.next_section(skip_animations=0)
         #---------------------------------#
         p_box.move_to(ORIGIN)
-
         self.play(FadeOut(original_sub_group),
                   FadeOut(green_rect),
                   FadeOut(invalid_sub_group),
@@ -130,14 +129,53 @@ class TestScene(Scene):
                   FadeOut(output_byte_1),
                   FadeIn(p_box), run_time=1)
         
+        # create input and output bytes for P-Box 
         input_byte = MathTable([["b_0", "b_1", "b_2", "b_3", "b_4", "b_5", "b_6", "b_7"]], 
                                include_outer_lines=True,
                                v_buff=1,
-                               h_buff=1).shift(UP * 1.5).scale(0.5)
-        output_byte = input_byte.copy().move_to(ORIGIN).shift(DOWN * 1.5)
+                               h_buff=1).shift(UP * 1.75).scale(0.5)
+        input_byte.get_entries_without_labels().set_color(BLACK)
+        input_colors = [custom_colors.ORANGE, custom_colors.RED, custom_colors.PINK, custom_colors.PURPLE,
+                  custom_colors.BLUE, custom_colors.CYAN, custom_colors.TURQUOISE, custom_colors.GREEN]
         
+        output_byte = MathTable([["b_6", "b_2", "b_5", "b_1", "b_7", "b_4", "b_0", "b_3"]], 
+                               include_outer_lines=True,
+                               v_buff=1,
+                               h_buff=1).shift(DOWN * 1.75).scale(0.5)
+        output_byte.get_entries_without_labels().set_color(BLACK)
+        output_colors = [custom_colors.TURQUOISE, custom_colors.PINK, custom_colors.CYAN, custom_colors.RED,
+                         custom_colors.GREEN, custom_colors.BLUE, custom_colors.ORANGE, custom_colors.PURPLE]
+
+        # fill input with ordered colors, output with permutation colors
+        for i in range(8):
+            input_byte.add_highlighted_cell((1, i+1), color=input_colors[i], fill_opacity=1)
+            output_byte.add_highlighted_cell((1, i+1), color=output_colors[i], fill_opacity=1)
+
+        perm_box = RoundedRectangle(corner_radius=0.25, height=1, width=4.5, color=custom_colors.FOREGROUND_1).move_to(ORIGIN + LEFT * 4)
+
+        input_byte_copy = input_byte.copy()
+        output_byte_copy = output_byte.copy().scale(0.75).move_to(perm_box.get_center())
+
+        input_arrow = Arrow(input_byte.get_bottom(), p_box.get_top(), color=custom_colors.FOREGROUND_1)
+        func_arrow = Arrow(p_box.get_left(), perm_box.get_right(), color=custom_colors.FOREGROUND_1)
+        output_arrow = Arrow(p_box.get_bottom(), output_byte.get_top(), color=custom_colors.FOREGROUND_1)
+
         self.play(FadeIn(input_byte),
-                  FadeIn(output_byte))
+                  FadeIn(perm_box))
+        self.play(GrowArrow(input_arrow))
+        self.play(GrowArrow(func_arrow),
+                  input_byte_copy.animate.move_to(perm_box.get_center()).scale(0.75))
+        self.play(Transform(input_byte_copy, output_byte_copy))
+        self.play(GrowArrow(output_arrow),
+                  FadeOut(input_byte_copy),
+                  FadeOut(output_byte_copy),
+                  Transform(output_byte_copy, output_byte))
+        
+
+        
+        
+        
+
         
         
 
