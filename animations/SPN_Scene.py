@@ -1,8 +1,9 @@
 from manim import *
 from extras import custom_colors
+import movable_table as mt
 
 config.background_color = custom_colors.BACKGROUND_1
-class TestScene(Scene):
+class SPN_Scene(Scene):
     def construct(self):
         
         #----------- SECTION 1 -----------#
@@ -129,47 +130,42 @@ class TestScene(Scene):
                   FadeOut(output_byte_1),
                   FadeIn(p_box), run_time=1)
         
-        # create input and output bytes for P-Box 
-        input_byte = MathTable([["b_0", "b_1", "b_2", "b_3", "b_4", "b_5", "b_6", "b_7"]], 
-                               include_outer_lines=True,
-                               v_buff=1,
-                               h_buff=1).shift(UP * 1.75).scale(0.5)
-        input_byte.get_entries_without_labels().set_color(BLACK)
-        input_colors = [custom_colors.ORANGE, custom_colors.RED, custom_colors.PINK, custom_colors.PURPLE,
-                  custom_colors.BLUE, custom_colors.CYAN, custom_colors.TURQUOISE, custom_colors.GREEN]
-        
-        output_byte = MathTable([["b_6", "b_2", "b_5", "b_1", "b_7", "b_4", "b_0", "b_3"]], 
-                               include_outer_lines=True,
-                               v_buff=1,
-                               h_buff=1).shift(DOWN * 1.75).scale(0.5)
-        output_byte.get_entries_without_labels().set_color(BLACK)
-        output_colors = [custom_colors.TURQUOISE, custom_colors.PINK, custom_colors.CYAN, custom_colors.RED,
-                         custom_colors.GREEN, custom_colors.BLUE, custom_colors.ORANGE, custom_colors.PURPLE]
-
-        # fill input with ordered colors, output with permutation colors
+        # create byte table with movable cells for P-Box demonstration
+        byte_colors = [custom_colors.ORANGE, custom_colors.RED, custom_colors.PINK, custom_colors.PURPLE,
+                       custom_colors.BLUE, custom_colors.CYAN, custom_colors.TURQUOISE, custom_colors.GREEN]
+        byte_cells = [[r"b_0", r"b_1", r"b_2", r"b_3",
+                       r"b_4", r"b_5", r"b_6", r"b_7"]]
+        input_byte = mt.MovableTable(byte_cells, rows=1, cols=8).move_to(p_box.get_center() + UP * 2)
         for i in range(8):
-            input_byte.add_highlighted_cell((1, i+1), color=input_colors[i], fill_opacity=1)
-            output_byte.add_highlighted_cell((1, i+1), color=output_colors[i], fill_opacity=1)
+            input_byte.cells[i].color_cell(byte_colors[i], opacity=1)
 
-        perm_box = RoundedRectangle(corner_radius=0.25, height=1, width=4.5, color=custom_colors.FOREGROUND_1).move_to(ORIGIN + LEFT * 4)
+        perm_box = RoundedRectangle(corner_radius=0.25, height=1, width=5, color=custom_colors.FOREGROUND_1).move_to(ORIGIN + LEFT * 4)
 
-        input_byte_copy = input_byte.copy()
-        output_byte_copy = output_byte.copy().scale(0.75).move_to(perm_box.get_center())
-
+        intermediate_byte = input_byte.copy()
         input_arrow = Arrow(input_byte.get_bottom(), p_box.get_top(), color=custom_colors.FOREGROUND_1)
         func_arrow = Arrow(p_box.get_left(), perm_box.get_right(), color=custom_colors.FOREGROUND_1)
-        output_arrow = Arrow(p_box.get_bottom(), output_byte.get_top(), color=custom_colors.FOREGROUND_1)
-
+    
         self.play(FadeIn(input_byte),
                   FadeIn(perm_box))
         self.play(GrowArrow(input_arrow))
         self.play(GrowArrow(func_arrow),
-                  input_byte_copy.animate.move_to(perm_box.get_center()).scale(0.75))
-        self.play(Transform(input_byte_copy, output_byte_copy))
-        self.play(GrowArrow(output_arrow),
-                  FadeOut(input_byte_copy),
-                  FadeOut(output_byte_copy),
-                  Transform(output_byte_copy, output_byte))
+                  intermediate_byte.animate.move_to(perm_box.get_center()).scale(0.75))
+        
+        # permute intermediate byte to output byte
+        movement_map = [(0, (0, 6)), (1, (0, 7)), (2, (0, 4)), (3, (0, 0)),
+                        (4, (0, 1)), (5, (0, 2)), (6, (0, 5)), (7, (0, 3))]
+        self.play(*intermediate_byte.move_cells(movement_map, 
+                                                rate_func=rate_functions.ease_in_out_cubic),
+                                                run_time=1)
+        self.wait(1)
+        
+        #intermediate_byte_copy = intermediate_byte.copy()
+        #output_byte = intermediate_byte.copy().scale(1.25).move_to(p_box.get_center() + DOWN * 2)
+        #self.play(Transform(intermediate_byte_copy, output_byte))
+#
+        #output_arrow = Arrow(p_box.get_bottom(), output_byte.get_top(), color=custom_colors.FOREGROUND_1)
+        #self.play(GrowArrow(output_arrow))
+        #self.wait(1)
         
 
         
