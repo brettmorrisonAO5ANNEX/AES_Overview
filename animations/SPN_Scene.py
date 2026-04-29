@@ -119,7 +119,7 @@ class SPN_Scene(Scene):
         
         #----------- SECTION 5 -----------#
         # P-Box properties
-        self.next_section(skip_animations=0)
+        self.next_section(skip_animations=1)
         #---------------------------------#
         p_box.move_to(ORIGIN)
         self.play(FadeOut(original_sub_group),
@@ -143,13 +143,16 @@ class SPN_Scene(Scene):
 
         intermediate_byte = input_byte.copy()
         input_arrow = Arrow(input_byte.get_bottom(), p_box.get_top(), color=custom_colors.FOREGROUND_1)
-        func_arrow = Arrow(p_box.get_left(), perm_box.get_right(), color=custom_colors.FOREGROUND_1)
+        func_line = Line(p_box.get_left(), perm_box.get_right(), color=custom_colors.FOREGROUND_1)
+        func_text = MathTex(r"f", font_size=28).move_to(func_line.get_center() + UP * 0.25)
     
         self.play(FadeIn(input_byte),
                   FadeIn(perm_box))
         self.play(GrowArrow(input_arrow))
-        self.play(GrowArrow(func_arrow),
-                  intermediate_byte.animate.move_to(perm_box.get_center()).scale(0.75))
+        self.play(Create(func_line),
+                  Write(func_text))
+        self.play(intermediate_byte.animate.move_to(perm_box.get_center()).scale(0.75),
+                  input_byte.animate.set_opacity(0.1))
         
         # permute intermediate byte to output byte
         movement_map = [(0, (0, 6)), (1, (0, 7)), (2, (0, 4)), (3, (0, 0)),
@@ -159,13 +162,53 @@ class SPN_Scene(Scene):
                                                 run_time=1)
         self.wait(1)
         
-        #intermediate_byte_copy = intermediate_byte.copy()
-        #output_byte = intermediate_byte.copy().scale(1.25).move_to(p_box.get_center() + DOWN * 2)
-        #self.play(Transform(intermediate_byte_copy, output_byte))
-#
-        #output_arrow = Arrow(p_box.get_bottom(), output_byte.get_top(), color=custom_colors.FOREGROUND_1)
-        #self.play(GrowArrow(output_arrow))
-        #self.wait(1)
+        intermediate_byte_copy = intermediate_byte.copy()
+        output_byte = intermediate_byte.copy().scale(1.25).move_to(p_box.get_center() + DOWN * 2)
+        output_arrow = Arrow(p_box.get_bottom(), output_byte.get_top(), color=custom_colors.FOREGROUND_1)
+
+        self.play(Transform(intermediate_byte_copy, output_byte),
+                  GrowArrow(output_arrow),
+                  intermediate_byte.animate.set_opacity(0.1))
+        self.wait(1)
+
+        #----------- SECTION 6 -----------#
+        # Round-key addition
+        self.next_section(skip_animations=0)
+        #---------------------------------#
+        self.play(FadeOut(input_byte, input_arrow, func_line, func_text, 
+                          intermediate_byte, perm_box, output_arrow, intermediate_byte_copy))
+
+        s_box.move_to(ORIGIN + LEFT)
+        self.play(p_box.animate.shift(RIGHT),
+                  FadeIn(s_box, pt_text, ct_text))
+
+        input_arrow = Arrow(pt_text.get_right(), s_box.get_left(), color=custom_colors.FOREGROUND_1)
+        output_arrow = Arrow(p_box.get_right(), ct_text.get_left(), color=custom_colors.FOREGROUND_1)
+        self.play(GrowArrow(input_arrow))
+        self.play(Create(s_to_p_arrow))
+        self.play(Create(p_to_s_arrow))
+        self.play(GrowArrow(output_arrow))
+
+        first_round_key = MathTex(r"k_0").move_to(input_arrow.get_center() + UP * 2)
+        rest_round_key = MathTex(r"k_i").shift(UP * 2)
+
+        xor_circ = Circle(radius=0.25, color=custom_colors.FOREGROUND_1, fill_opacity=0)
+        xor_line_1 = Line(xor_circ.get_left(), xor_circ.get_right(), color=custom_colors.FOREGROUND_1)
+        xor_line_2 = Line(xor_circ.get_top(), xor_circ.get_bottom(), color=custom_colors.FOREGROUND_1)
+        xor_elem = VGroup(xor_circ, xor_line_1, xor_line_2)
+
+        first_xor = xor_elem.copy().move_to(input_arrow.get_center())  
+        first_round_xor = VGroup(first_xor,
+                                 Line(first_round_key.get_bottom(), first_xor.get_top(), color=custom_colors.FOREGROUND_1))
+        
+        rest_xor = xor_elem.copy().move_to(p_to_s_arrow.get_center())
+        rest_round_xor = VGroup(rest_xor,
+                                Line(rest_round_key.get_bottom(), rest_xor.get_top(), color=custom_colors.FOREGROUND_1))
+
+        self.play(FadeIn(first_round_key, rest_round_key))
+        self.play(FadeIn(first_round_xor, rest_round_xor))
+        self.wait(1)
+                  
         
 
         
