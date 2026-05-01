@@ -22,7 +22,7 @@ class SPN_Scene(Scene):
 
         #----------- SECTION 2 -----------#
         # SPN introduction
-        self.next_section(skip_animations=1)
+        self.next_section(skip_animations=0)
         #---------------------------------#
         s_box_circle = Circle(radius=0.5, color=custom_colors.ORANGE, fill_opacity=0.5)
         s_box_text = Text("S", font_size=30, slant=ITALIC, color=WHITE).move_to(s_box_circle.get_center())
@@ -32,26 +32,50 @@ class SPN_Scene(Scene):
         p_box_text = Text("P", font_size=30, slant=ITALIC, color=WHITE).move_to(p_box_circle.get_center())
         p_box = VGroup(p_box_circle, p_box_text).shift(RIGHT)
 
-        pt_text = Text("plaintext", font_size=28, color=WHITE).shift(LEFT * 4)
-        ct_text = Text("ciphertext", font_size=28, color=WHITE).shift(RIGHT * 4)
+        pt_text = Text("plaintext", font_size=28, color=WHITE)
+        pt_text.add_updater(lambda m: m.next_to(s_box, LEFT, buff=2))
+        ct_text = Text("ciphertext", font_size=28, color=WHITE)
+        ct_text.add_updater(lambda m: m.next_to(p_box, RIGHT, buff=2))
 
-        input_arrow = Arrow(pt_text.get_right(), s_box.get_left(), color=custom_colors.FOREGROUND_1)
-        s_to_p_arrow = CurvedArrow(s_box.get_bottom(), p_box.get_bottom(), color=custom_colors.FOREGROUND_1)
-        p_to_s_arrow = CurvedArrow(p_box.get_top(), s_box.get_top(), color=custom_colors.FOREGROUND_1)
-        output_arrow = Arrow(p_box.get_right(), ct_text.get_left(), color=custom_colors.FOREGROUND_1)
+        spn_input_arrow = Arrow(pt_text.get_right() + RIGHT * 0.25, 
+                                s_box.get_left(), 
+                                color=custom_colors.FOREGROUND_1, buff=0)
+        spn_input_arrow.add_updater(lambda m: m.put_start_and_end_on(
+            pt_text.get_right() + RIGHT * 0.25,
+            s_box.get_left()
+        ))
+        s_to_p_arrow = CurvedArrow(s_box.get_bottom(), 
+                                   p_box.get_bottom(), 
+                                   color=custom_colors.FOREGROUND_1)
+        s_to_p_arrow.add_updater(lambda m: m.put_start_and_end_on(
+            s_box.get_bottom(),
+            p_box.get_bottom()
+        ))
+        p_to_s_arrow = CurvedArrow(p_box.get_top(), 
+                                   s_box.get_top(), 
+                                   color=custom_colors.FOREGROUND_1)
+        p_to_s_arrow.add_updater(lambda m: m.put_start_and_end_on(
+            p_box.get_top(),
+            s_box.get_top()
+        ))
+        spn_output_arrow = Arrow(p_box.get_right(),
+                                 ct_text.get_left() + LEFT * 0.25,
+                                 color=custom_colors.FOREGROUND_1, buff=0)
+        spn_output_arrow.add_updater(lambda m: m.put_start_and_end_on(
+            p_box.get_right(), 
+            ct_text.get_left() + LEFT * 0.25
+        ))
+
+        #TODO: create bracket with 'n rounds' under the s-p cycle
 
         self.play(FadeIn(s_box),
                   FadeIn(p_box))
-        self.wait(1)
-
         self.play(FadeIn(pt_text),
                   FadeIn(ct_text))
-        self.wait(1)
-
-        self.play(GrowArrow(input_arrow))
+        self.play(Create(spn_input_arrow))
         self.play(Create(s_to_p_arrow))
         self.play(Create(p_to_s_arrow))
-        self.play(GrowArrow(output_arrow))
+        self.play(Create(spn_output_arrow))
         self.wait(1)
 
         #----------- SECTION 3 -----------#
@@ -61,10 +85,10 @@ class SPN_Scene(Scene):
         self.play(FadeOut(pt_text),
                   FadeOut(ct_text),
                   FadeOut(p_box),
-                  FadeOut(input_arrow),
+                  FadeOut(spn_input_arrow),
                   FadeOut(s_to_p_arrow),
                   FadeOut(p_to_s_arrow),
-                  FadeOut(output_arrow),
+                  FadeOut(spn_output_arrow),
                   s_box.animate.move_to(ORIGIN))
 
         sub_table_rect = RoundedRectangle(corner_radius=0.25, height=1, width=2, color=custom_colors.RED, fill_opacity=0)
@@ -178,35 +202,35 @@ class SPN_Scene(Scene):
         self.play(FadeOut(input_byte, input_arrow, func_line, func_text, 
                           intermediate_byte, perm_box, output_arrow, intermediate_byte_copy))
 
-        s_box.move_to(ORIGIN + LEFT)
-        self.play(p_box.animate.shift(RIGHT),
+        s_box.move_to(ORIGIN + LEFT + DOWN * 0.5)
+        self.play(p_box.animate.shift(RIGHT + DOWN * 0.5),
                   FadeIn(s_box, pt_text, ct_text))
 
-        input_arrow = Arrow(pt_text.get_right(), s_box.get_left(), color=custom_colors.FOREGROUND_1)
-        output_arrow = Arrow(p_box.get_right(), ct_text.get_left(), color=custom_colors.FOREGROUND_1)
-        self.play(GrowArrow(input_arrow))
+        self.play(Create(spn_input_arrow))
         self.play(Create(s_to_p_arrow))
         self.play(Create(p_to_s_arrow))
-        self.play(GrowArrow(output_arrow))
+        self.play(Create(spn_output_arrow))
 
-        first_round_key = MathTex(r"k_0").move_to(input_arrow.get_center() + UP * 2)
-        rest_round_key = MathTex(r"k_i").shift(UP * 2)
+        first_round_key = MathTex(r"\left\{ k_0\right\}").move_to(spn_input_arrow.get_center() + UP * 2)
+        rest_round_key = MathTex(r"\left\{ k_i\right\}").shift(UP * 1.5)
 
-        xor_circ = Circle(radius=0.25, color=custom_colors.FOREGROUND_1, fill_opacity=0)
+        xor_circ = Circle(radius=0.15, color=custom_colors.FOREGROUND_1, fill_opacity=0)
         xor_line_1 = Line(xor_circ.get_left(), xor_circ.get_right(), color=custom_colors.FOREGROUND_1)
         xor_line_2 = Line(xor_circ.get_top(), xor_circ.get_bottom(), color=custom_colors.FOREGROUND_1)
         xor_elem = VGroup(xor_circ, xor_line_1, xor_line_2)
 
-        first_xor = xor_elem.copy().move_to(input_arrow.get_center())  
+        first_xor = xor_elem.copy().move_to(spn_input_arrow.get_center())  
         first_round_xor = VGroup(first_xor,
                                  Line(first_round_key.get_bottom(), first_xor.get_top(), color=custom_colors.FOREGROUND_1))
         
-        rest_xor = xor_elem.copy().move_to(p_to_s_arrow.get_center())
+        rest_xor = xor_elem.copy().move_to(p_to_s_arrow.get_top())
+        # remove horizontal line in XOR to match curve of arrow
+        rest_xor.remove(rest_xor[1])
         rest_round_xor = VGroup(rest_xor,
                                 Line(rest_round_key.get_bottom(), rest_xor.get_top(), color=custom_colors.FOREGROUND_1))
 
-        self.play(FadeIn(first_round_key, rest_round_key))
-        self.play(FadeIn(first_round_xor, rest_round_xor))
+        self.play(FadeIn(first_round_key, first_round_xor))
+        self.play(FadeIn(rest_round_key, rest_round_xor))
         self.wait(1)
                   
         
