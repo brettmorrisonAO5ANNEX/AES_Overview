@@ -39,6 +39,8 @@ class MovableTable(VGroup):
         self.cells = {}
         for r in range(rows):
             for c in range(cols):
+                # for debugging
+                #print((r, c))
                 cell = MovableCell((r, c), cell_labels[r][c], width=cell_width, height=cell_height)
                 cell.move_to(self.coords_to_point((r, c)))
 
@@ -48,7 +50,7 @@ class MovableTable(VGroup):
                 self.add(cell)
     
         # center table at the origin
-        self.move_to(ORIGIN)
+        #self.move_to(ORIGIN)
     
     # converts relative cell coordinates to absolute screen position
     def coords_to_point(self, coords):
@@ -57,9 +59,11 @@ class MovableTable(VGroup):
         # reference point for cell placement
         cell_height = self.reference_rect.height / self.num_rows 
         cell_width = self.reference_rect.width / self.num_cols
-        v_shift = (self.reference_rect.get_top() + DOWN * (cell_height / 2))
-        h_shift = (self.reference_rect.get_left() + RIGHT * (cell_width / 2))
-        top_left_cell = v_shift + h_shift
+        top_left_x = (self.reference_rect.get_left() + RIGHT * (cell_width / 2))[0]
+        top_left_y = (self.reference_rect.get_top() + DOWN * (cell_height / 2))[1]
+
+        # TODO: bug comes from adding the vectors v and h_shift 
+        top_left_cell = [top_left_x, top_left_y, 0]
 
         # destination is center of cell at (r, c)
         dest_point = top_left_cell + RIGHT * (c * cell_width) + DOWN * (r * cell_height)
@@ -76,32 +80,42 @@ class MovableTable(VGroup):
 
         return cell.animate.move_to(dest_pos)
     
-    def non_linear_move_cell(self, cell_num, dest_coords, path_arc):
-        dest_post = self.coords_to_point(dest_coords)
+    def non_linear_move_cell(self, cell_num, dest_coords, path_arc, rate_func):
+        #dest_post = self.coords_to_point(dest_coords)
         cell = self.cells[cell_num]
 
         #update cell coordinates
         cell.coordinates = dest_coords
 
-        return MoveAlongPath(cell, path_arc, rate_func=linear)
+        return MoveAlongPath(cell, path_arc, rate_func=rate_func)
+
+    def move_cells(self, movement_map, rate_func=linear):
+        # movement map is a dictionary mapping cell numbers to destination coordinates
+        # arc shift alternates the direction of arcs for non-overlapping animations
+        arc_shift = -1
+        animations = []
+        for (cell_num, dest_coords) in movement_map:
+            start = self.cells[cell_num].get_center()
+            end = self.coords_to_point(dest_coords)
+            arc = ArcBetweenPoints(start, end, angle=arc_shift * PI/2)
+            anim = self.non_linear_move_cell(cell_num, dest_coords, arc, rate_func)
+            animations.append(anim)
+            arc_shift *= -1
+        
+        return animations
             
 # Test Scene for debugging
-class MovableTableScene(Scene):
+class Example(Scene):
     def construct(self):
-        cell_labels = [[r"b_0", r"b_1", r"b_2", r"b_3"],
-                       [r"b_4", r"b_5", r"b_6", r"b_7"],
-                       [r"b_8", r"b_9", r"b_{10}", r"b_{11}"],
-                       [r"b_{12}", r"b_{13}", r"b_{14}", r"b_{15}"]]
-        table = MovableTable(cell_labels, rows=4, cols=4)
-        table.cells[0].color_cell(RED, opacity=1)
+        cell_labels = [[r"b_0", r"b_1"]]
+        table = MovableTable(cell_labels, rows=1, cols=2)
 
         self.play(FadeIn(table))
 
-        arc1 = ArcBetweenPoints(table.cells[0].get_center(), table.cells[10].get_center(), angle=-PI/2)
-        arc2 = ArcBetweenPoints(table.cells[10].get_center(), table.cells[0].get_center(), angle=-PI/2)
+        movement_map = [(0, (0, 1)), (1, (0, 0))]
 
-        self.play(table.non_linear_move_cell(0, (2, 2), arc1),
-                  table.non_linear_move_cell(10, (0, 0), arc2))
+        self.play(table.animate.shift(UP * 2))        
+        self.play(*table.move_cells(movement_map))
         self.wait(1)
         
                                                                            
