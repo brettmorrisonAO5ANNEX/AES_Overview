@@ -22,7 +22,7 @@ class SPN_Scene(Scene):
 
         #----------- SECTION 2 -----------#
         # SPN introduction
-        self.next_section(skip_animations=0)
+        self.next_section(skip_animations=1)
         #---------------------------------#
         s_box_circle = Circle(radius=0.5, color=custom_colors.ORANGE, fill_opacity=0.5)
         s_box_text = Text("S", font_size=30, slant=ITALIC, color=WHITE).move_to(s_box_circle.get_center())
@@ -67,12 +67,16 @@ class SPN_Scene(Scene):
         ))
 
         #TODO: create bracket with 'n rounds' under the s-p cycle
+        round_brace = BraceBetweenPoints(s_box.get_left(), p_box.get_right()).shift(DOWN)
+        round_brace_txt = MathTex(r"n\ rounds").move_to(round_brace.get_bottom() + DOWN * 0.25)
+        brace = VGroup(round_brace, round_brace_txt)
 
         self.play(FadeIn(s_box),
                   FadeIn(p_box))
         self.play(FadeIn(pt_text),
                   FadeIn(ct_text))
         self.play(Create(spn_input_arrow))
+        self.play(FadeIn(brace))
         self.play(Create(s_to_p_arrow))
         self.play(Create(p_to_s_arrow))
         self.play(Create(spn_output_arrow))
@@ -89,6 +93,7 @@ class SPN_Scene(Scene):
                   FadeOut(s_to_p_arrow),
                   FadeOut(p_to_s_arrow),
                   FadeOut(spn_output_arrow),
+                  FadeOut(brace),
                   s_box.animate.move_to(ORIGIN))
 
         sub_table_rect = RoundedRectangle(corner_radius=0.25, height=1, width=2, color=custom_colors.RED, fill_opacity=0)
@@ -197,7 +202,7 @@ class SPN_Scene(Scene):
 
         #----------- SECTION 6 -----------#
         # Round-key addition
-        self.next_section(skip_animations=0)
+        self.next_section(skip_animations=1)
         #---------------------------------#
         self.play(FadeOut(input_byte, input_arrow, func_line, func_text, 
                           intermediate_byte, perm_box, output_arrow, intermediate_byte_copy))
@@ -207,6 +212,9 @@ class SPN_Scene(Scene):
                   FadeIn(s_box, pt_text, ct_text))
 
         self.play(Create(spn_input_arrow))
+
+        brace.shift(DOWN*0.5)
+        self.play(FadeIn(brace))
         self.play(Create(s_to_p_arrow))
         self.play(Create(p_to_s_arrow))
         self.play(Create(spn_output_arrow))
@@ -233,6 +241,44 @@ class SPN_Scene(Scene):
         self.play(FadeIn(rest_round_key, rest_round_xor))
         self.wait(1)
                   
+        #----------- SECTION 7 -----------#
+        # SPN decryption
+        self.next_section(skip_animations=1)
+        #---------------------------------#
+        input_start, input_end = spn_input_arrow.get_start_and_end()
+        s_to_p_start, s_to_p_end = s_to_p_arrow.get_start_and_end()
+        p_to_s_start, p_to_s_end = p_to_s_arrow.get_start_and_end()
+        output_start, output_end = spn_output_arrow.get_start_and_end()
+
+        spn_input_arrow.clear_updaters()
+        s_to_p_arrow.clear_updaters()
+        p_to_s_arrow.clear_updaters()
+        spn_output_arrow.clear_updaters()
+
+        new_s_to_p = CurvedArrow(s_to_p_end, s_to_p_start, angle=-s_to_p_arrow.angle, color=custom_colors.FOREGROUND_1)
+        new_p_to_s = CurvedArrow(p_to_s_end, p_to_s_start, angle=-p_to_s_arrow.angle, color=custom_colors.FOREGROUND_1)
+
+        self.play(spn_input_arrow.animate.put_start_and_end_on(input_end, input_start),
+                  ReplacementTransform(s_to_p_arrow, new_s_to_p),
+                  ReplacementTransform(p_to_s_arrow, new_p_to_s),
+                  spn_output_arrow.animate.put_start_and_end_on(output_end, output_start))
+        self.wait(1)
+
+        #----------- SECTION 8 -----------#
+        # Finite Field Theory
+        self.next_section(skip_animations=0)
+        #---------------------------------#
+        self.play(FadeOut(s_box, p_box, ct_text, pt_text, spn_input_arrow, spn_output_arrow,
+                          new_s_to_p, new_p_to_s, first_round_xor, rest_round_xor,
+                          first_round_key, rest_round_key, brace),
+                  spn_text.animate.scale(1.25).move_to(finite_field_text.get_center() + UP).align_to(finite_field_text, LEFT), 
+                  FadeIn(finite_field_text), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(spn_text), finite_field_text.animate.scale(0.75).to_edge(UP + LEFT, buff=0.75))
+        self.wait(1)
+
+
+
         
 
         
