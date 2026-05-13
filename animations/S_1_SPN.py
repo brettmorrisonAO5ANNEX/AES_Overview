@@ -1,6 +1,6 @@
 from manim import *
 from extras import custom_colors
-import movable_table as mt
+import extras.movable_table as mt
 
 config.background_color = custom_colors.BACKGROUND_1
 class SPN_Scene(Scene):
