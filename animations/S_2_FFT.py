@@ -127,19 +127,19 @@ class FFT_Scene(Scene):
                   FadeOut(id_extras, id_group),
                   ReplacementTransform(axioms_label, galois_field_label))
         
-        galois_field_def = MathTex(r"GF = A_{fin},\left\{ +,* \right\}").move_to(standard_field_def.get_center())
+        galois_field_def = MathTex(r"GF = S_{fin},\left\{ +,* \right\}").move_to(standard_field_def.get_center())
         self.play(ReplacementTransform(finite_field_def, galois_field_def))
 
         galois_field_representation = MathTex(r"GF(p^m) \ | \ p \in \mathbb{P}, m\in\mathbb{Z^+}").next_to(
-            axioms_line, DOWN, buff=0.5).align_to(axioms_line, LEFT)
+            axioms_line, DOWN, buff=0.5)
         galois_field_elements = MathTex(r"S=\left\{ 0, \ 1, \ ..., \ p^m-1 \right\}").next_to(
-            galois_field_representation, DOWN, buff=0.5).align_to(axioms_line, LEFT)
+            galois_field_representation, DOWN, buff=0.5).align_to(galois_field_representation, LEFT)
         galois_field_order = MathTex(r"\left| S \right|=p^m").next_to(
-            galois_field_elements, DOWN, buff=0.5).align_to(axioms_line, LEFT)
+            galois_field_elements, DOWN, buff=0.5).align_to(galois_field_representation, LEFT)
         
-        self.play(FadeIn(galois_field_representation),
-                  FadeIn(galois_field_elements),
-                  FadeIn(galois_field_order))
+        self.play(FadeIn(galois_field_representation))
+        self.play(FadeIn(galois_field_elements))
+        self.play(FadeIn(galois_field_order))
         
         
 
