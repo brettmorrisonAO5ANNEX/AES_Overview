@@ -57,7 +57,7 @@ class FFT_Scene(Scene):
                            stroke_width=2,
                            buff=0.5).next_to(axioms_label, DOWN, buff=0.2)
         axioms_title = VGroup(axioms_label, axioms_line).move_to(axioms_rect.get_top() + DOWN * 0.5)
-        axioms_box = VGroup(axioms_title, axioms_rect, axioms_label)
+        axioms_box = VGroup(axioms_title, axioms_rect)
     
         self.play(FadeIn(axioms_box))
 
@@ -111,7 +111,7 @@ class FFT_Scene(Scene):
 
         #----------- SECTION 2 -----------#
         # Galois Fields
-        self.next_section(skip_animations=0)
+        self.next_section(skip_animations=1)
         #---------------------------------#
         
         finite_field_def = MathTex(r"F = S\subset_{fin} \mathbb{Z},\left\{ +,* \right\}").move_to(standard_field_def.get_center())
@@ -125,7 +125,7 @@ class FFT_Scene(Scene):
                   FadeOut(dist_extras, distributivity),
                   FadeOut(inv_extras, inv_group),
                   FadeOut(id_extras, id_group),
-                  ReplacementTransform(axioms_label, galois_field_label))
+                  ReplacementTransform(axioms_title[0], galois_field_label))
         
         galois_field_def = MathTex(r"GF = S_{fin},\left\{ +,* \right\}").move_to(standard_field_def.get_center())
         self.play(ReplacementTransform(finite_field_def, galois_field_def))
@@ -140,7 +140,25 @@ class FFT_Scene(Scene):
         self.play(FadeIn(galois_field_representation))
         self.play(FadeIn(galois_field_elements))
         self.play(FadeIn(galois_field_order))
-        
-        
 
+        self.play(FadeOut(galois_field_representation),
+                  FadeOut(galois_field_elements),
+                  FadeOut(galois_field_order),
+                  FadeOut(galois_field_def),
+                  FadeOut(standard_field),
+                  FadeOut(axioms_box))
+        
+        #----------- SECTION 3 -----------#
+        # Galois field arithmetic
+        self.next_section(skip_animations=0)
+        #---------------------------------#
 
+        byte_extended_label = MathTex(r"00000000\longrightarrow").shift(UP * 0.5 + LEFT * 1.5)
+        byte_max = MathTex(r"11111111").next_to(byte_extended_label, RIGHT, buff=0.25)
+        int_label = MathTex(r"0 \longrightarrow").next_to(byte_extended_label, DOWN, buff=0.5).align_to(byte_extended_label, RIGHT)
+        int_max = MathTex(r"255").next_to(int_label, RIGHT, buff=0.25)
+
+        self.play(FadeIn(byte_extended_label),
+                  FadeIn(byte_max))
+        self.play(FadeIn(int_label),
+                  FadeIn(int_max))
